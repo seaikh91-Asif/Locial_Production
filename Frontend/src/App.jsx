@@ -1,0 +1,28 @@
+import React from 'react'
+import { Routes, Route } from 'react-router-dom'
+import Login from './Pages/Login.jsx'
+import Feed from './Pages/Feed.jsx'
+import Messages from './Pages/Messages.jsx'
+import ChatBox from './Pages/ChatBox.jsx'
+import Connections from './Pages/Connections.jsx'
+import Discover from './Pages/Discover.jsx'
+import Profile from './Pages/Profile.jsx'
+import CreatePost from './Pages/CreatePost.jsx'
+
+
+const App = () => (
+  <Routes>
+    <Route path='/' element= {<Login/>}>
+      <Route index element={<Feed/>}/>
+      <Route path='messages' element={<Messages/>}/>
+      <Route path='messagee/:userId' element={<ChatBox/>}/>
+      <Route path='connections' element={<Connections/>}/>
+      <Route path='discover' element={<Discover/>}/>
+      <Route path='profile' element={<Profile/>}/>
+      <Route path='profile/:profileId' element={<Profile/>}/>
+      <Route path='create-post' element={<CreatePost/>}/>
+    </Route>
+  </Routes>
+)
+
+export default App
