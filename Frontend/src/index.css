@@ -5,3 +5,7 @@
 *{
     font-family: "JetBrains Mono", monospace;
 }
+
+.no-scrollbar::-webkit-scrollbar{
+    display: none;
+}
