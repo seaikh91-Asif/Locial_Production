@@ -58,7 +58,7 @@ const StoriesBar = () => {
         {/* Add Story Model */}
         {showModal && <StoryModel setShowModal={setShowModal} fetchStories={fetchStorie}/> }
 
-        {/* View Story Model */}
+        {/* View Story Model  */}
         {viewStory && <StoryViewer viewStory={viewStory} setViewStory={setViewStory}/>}
     </div>
   )
