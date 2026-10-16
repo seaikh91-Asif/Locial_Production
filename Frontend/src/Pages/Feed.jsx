@@ -3,6 +3,7 @@ import {assets, dummyPostsData} from '../assets/assets'
 import Loding from '../Components/Loding'
 import StoriesBar from '../Components/StoriesBar'
 import PostCard from '../Components/PostCard'
+import RecentMessages from '../Components/RecentMessages'
 
 const Feed = () => {
 
@@ -38,7 +39,7 @@ const Feed = () => {
           <p className= 'text-slate-600'>Email Marketing</p>
           <p className='text-slate-400' > Supercharge your marketign with a powerful, easy-to-use platform build for resulsts.</p>
         </div>
-        <h1>Recent messages</h1>
+        <RecentMessages/>
       </div>
     </div>
   ) : <Loding/>
