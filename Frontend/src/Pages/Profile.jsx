@@ -6,6 +6,7 @@ import UserProfileInfo from '../Components/UserProfileInfo'
 import PostCard from '../Components/PostCard'
 import { Link } from 'lucide-react'
 import moment from 'moment'
+import ProfileModel from '../Components/ProfileModel'
 
 const Profile = () => {
   const { profileId } = useParams()
@@ -75,7 +76,7 @@ const Profile = () => {
         </div>
       </div>
       {/* Edit profile Model */}
-      {showEdit && <p>show profile edit</p>}
+      {showEdit && <ProfileModel setShowEdit={setShowEdit}/>}
     </div>
   ) : (<Loding/>)
 }
