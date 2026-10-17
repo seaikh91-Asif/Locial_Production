@@ -26,7 +26,7 @@ const Connections = () => {
         <div className='mb-8'>
               <h1 className='text-3xl font-bold text-slate-900 mb-2'>Connections</h1>
               <p className='text-slate-600'>Manage your network and discover new connections</p>
-            </div>
+        </div>
             {/* Counts */}
             <div className='mb-8 flex flex-wrap gap-6'>
               {dataArray.map((item, index) => (
@@ -53,42 +53,42 @@ const Connections = () => {
             </div>
 
             {/* Connections */}
-        <div className='flex flex-wrap gap-6 mt-6'>
-          {dataArray.find((item) => item.label === currentTab).value.map((user) => (
-            <div key={user._id} className='w-full sm:w-88 flex gap-5 p-4 bg-white shadow rounded-md'>
-              <img src={user.profile_picture} alt="" className='rounded-full w-12 h-12 shadow-md shrink-0' />
-              <div className='flex-1'>
-                <p className='font-medium text-slate-700'>{user.full_name}</p>
-                <p className='text-slate-500'>@{user.username}</p>
-                <p className='text-sm text-gray-600'>{user.bio.slice(0, 30)}...</p>
-                <div className='flex max-sm:flex-col gap-2 mt-4'>
-                  <button onClick={() => navigate(`/profile/${user._id}`)} className='flex-1 whitespace-nowrap p-2 text-sm rounded bg-linear-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 active:scale-95 transition text-white cursor-pointer'>
-                    View Profile
-                  </button>
-
-                  {currentTab === 'Following' && (
-                    <button className='flex-1 whitespace-nowrap p-2 text-sm rounded bg-slate-100 hover:bg-slate-200 text-black active:scale-95 transition cursor-pointer'>
-                      Unfollow
+          <div className='flex flex-wrap gap-6 mt-6'>
+            {dataArray.find((item) => item.label === currentTab).value.map((user) => (
+              <div key={user._id} className='w-full sm:w-88 flex gap-5 p-4 bg-white shadow rounded-md'>
+                <img src={user.profile_picture} alt="" className='rounded-full w-12 h-12 shadow-md shrink-0' />
+                <div className='flex-1'>
+                  <p className='font-medium text-slate-700'>{user.full_name}</p>
+                  <p className='text-slate-500'>@{user.username}</p>
+                  <p className='text-sm text-gray-600'>{user.bio.slice(0, 30)}...</p>
+                  <div className='flex max-sm:flex-col gap-2 mt-4'>
+                    <button onClick={() => navigate(`/profile/${user._id}`)} className='flex-1 whitespace-nowrap p-2 text-sm rounded bg-linear-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 active:scale-95 transition text-white cursor-pointer'>
+                      View Profile
                     </button>
-                  )}
 
-                  {currentTab === 'Pending' && (
-                    <button className='flex-1 whitespace-nowrap p-2 text-sm rounded bg-slate-100 hover:bg-slate-200 text-black active:scale-95 transition cursor-pointer'>
-                      Accept
-                    </button>
-                  )}
+                    {currentTab === 'Following' && (
+                      <button className='flex-1 whitespace-nowrap p-2 text-sm rounded bg-slate-100 hover:bg-slate-200 text-black active:scale-95 transition cursor-pointer'>
+                        Unfollow
+                      </button>
+                    )}
 
-                  {currentTab === 'Connections' && (
-                    <button onClick={() => navigate(`/messages/${user._id}`)} className='flex-1 whitespace-nowrap p-2 text-sm rounded bg-slate-100 hover:bg-slate-200 text-slate-800 active:scale-95 transition cursor-pointer flex items-center justify-center gap-1'>
-                      <MessageSquare className='w-4 h-4' />
-                      Message
-                    </button>
-                  )}
+                    {currentTab === 'Pending' && (
+                      <button className='flex-1 whitespace-nowrap p-2 text-sm rounded bg-slate-100 hover:bg-slate-200 text-black active:scale-95 transition cursor-pointer'>
+                        Accept
+                      </button>
+                    )}
+
+                    {currentTab === 'Connections' && (
+                      <button onClick={() => navigate(`/messages/${user._id}`)} className='flex-1 whitespace-nowrap p-2 text-sm rounded bg-slate-100 hover:bg-slate-200 text-slate-800 active:scale-95 transition cursor-pointer flex items-center justify-center gap-1'>
+                        <MessageSquare className='w-4 h-4' />
+                        Message
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
       </div>
     </div>
   )
