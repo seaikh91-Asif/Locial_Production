@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom'
 import { dummyPostsData, dummyUserData } from '../assets/assets'
 import Loding from '../Components/Loding'
 import UserProfileInfo from '../Components/UserProfileInfo'
+import PostCard from '../Components/PostCard'
 
 const Profile = () => {
   const { profileId } = useParams()
@@ -43,6 +44,12 @@ const Profile = () => {
               </button>
             )) }
           </div>
+          {/* Posts */}
+          {activeTab === 'post' && (
+          <div className='mt-6 flex flex-col items-center gap-6'>
+            {posts.map((post) => <PostCard key={post._id} post={post} />)}
+          </div>
+          )}
         </div>
       </div>
     </div>
