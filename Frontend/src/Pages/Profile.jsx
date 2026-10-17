@@ -74,6 +74,8 @@ const Profile = () => {
           )}  
         </div>
       </div>
+      {/* Edit profile Model */}
+      {showEdit && <p>show profile edit</p>}
     </div>
   ) : (<Loding/>)
 }
