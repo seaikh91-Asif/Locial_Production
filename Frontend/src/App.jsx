@@ -36,3 +36,4 @@ const App = () => {
 }
 
 export default App
+// FRONTEND OF THE APPLICATION IS FINISH 
