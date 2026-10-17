@@ -4,6 +4,8 @@ import { dummyPostsData, dummyUserData } from '../assets/assets'
 import Loding from '../Components/Loding'
 import UserProfileInfo from '../Components/UserProfileInfo'
 import PostCard from '../Components/PostCard'
+import { Link } from 'lucide-react'
+import moment from 'moment'
 
 const Profile = () => {
   const { profileId } = useParams()
@@ -50,6 +52,26 @@ const Profile = () => {
             {posts.map((post) => <PostCard key={post._id} post={post} />)}
           </div>
           )}
+
+          {/* Media */}
+          {activeTab === 'media' && (
+            <div className='flex flex-wrap mt-6 max-w-6xl'>
+              {posts
+                .filter((post) => post.image_urls?.length > 0)
+                .map((post) => (
+                  <React.Fragment key={post._id}>
+                    {post.image_urls.map((img, index) => (
+                      <a key={index} href={img} target='_blank' rel='noreferrer' className='relative group'>
+                        <img src={img} className='w-64 aspect-video object-cover' alt="" />
+                        <p className='absolute bottom-0 right-0 text-xs p-1 px-3 backdrop-blur-xl text-white opacity-0 group-hover:opacity-100 transition duration-300'>
+                          Posted {moment(post.createdAt).fromNow()}
+                        </p>
+                      </a>
+                    ))}
+                  </React.Fragment>
+                ))}
+            </div>
+          )}  
         </div>
       </div>
     </div>
