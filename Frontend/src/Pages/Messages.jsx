@@ -47,4 +47,3 @@ const Messages = () => {
 }
 
 export default Messages
-// complete message page
