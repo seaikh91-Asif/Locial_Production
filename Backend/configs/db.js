@@ -1,11 +1,12 @@
-import mongoose from "mongoose";
+import mongoose from "mongoose"
 
 const connectDB = async () => {
-    try{
+    try {
         mongoose.connection.on('connected', () => console.log("Database Connected"))
         await mongoose.connect(`${process.env.MONGODB_URI}/Locial`)
-    } catch(error) {
+    } catch (error) {
         console.log(error.message)
+        process.exit(1)
     }
 }
 
