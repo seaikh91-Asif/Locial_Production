@@ -1,56 +1,97 @@
-import fs from "fs"; 
-import imagekit from "../configs/imagekit.js";
-import Post from "../src/models/Post.js";
+import fs from "fs"
+import imagekit from "../configs/imagekit.js"
+import Post from "../src/models/Post.js"
+import User from "../src/models/User.js"
 
-// Add Post 
+// Add Post
 export const addPost = async (req, res) => {
     try {
-        const { userId } = req.auth(); // Assuming this is from Clerk or similar
-        const { content, post_type } = req.body; 
-        const images = req.files;
+        const { userId } = req.auth()
+        const { content, post_type } = req.body
+        const images = req.files
 
-        let image_urls = [];
+        let image_urls = []
 
-        // Use optional chaining in case req.files is undefined
         if (images?.length) {
             image_urls = await Promise.all(
                 images.map(async (image) => {
-                    const fileBuffer = fs.readFileSync(image.path);
-                    
-                    // The standard ImageKit SDK method is imagekit.upload()
-                    const response = await imagekit.upload({
-                        file: fileBuffer,
+                    const response = await imagekit.files.upload({
+                        file: fs.createReadStream(image.path),
                         fileName: image.originalname,
-                        folder: "posts", 
-                    });
+                        folder: "posts",
+                    })
 
-                    // Build the optimized URL
-                    const optimizedUrl = imagekit.url({
-                        src: response.url,
+                    return imagekit.helper.buildSrc({
+                        urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT,
+                        src: response.filePath,
                         transformation: [
-                            { quality: 'auto' }, 
+                            { quality: 'auto' },
                             { format: 'webp' },
                             { width: 1280 }
                         ],
-                    });
-                    
-                    // Return the generated URL string directly
-                    return optimizedUrl;
+                    })
                 })
-            );
+            )
         }
 
         await Post.create({
             user: userId,
-            content, 
-            image_urls, // Now matches the variable initialized above
+            content,
+            image_urls,
             post_type
-        });
-        
-        res.json({success: true, message: "Post created Successfully"}); 
+        })
+
+        res.json({ success: true, message: "Post created successfully" })
 
     } catch (error) {
-        console.log(error);
-        res.json({success: false, message: error.message }); 
+        console.log(error)
+        res.json({ success: false, message: error.message })
     }
-};
+}
+
+// Get Feed Posts
+export const getFeedPosts = async (req, res) => {
+    try {
+        const { userId } = req.auth()
+        const user = await User.findById(userId)
+
+        // User's own posts, connections and followings
+        const userIds = [userId, ...user.connections, ...user.following]
+        const posts = await Post.find({ user: { $in: userIds } })
+            .populate('user')
+            .sort({ createdAt: -1 })
+
+        res.json({ success: true, posts })
+
+    } catch (error) {
+        console.log(error)
+        res.json({ success: false, message: error.message })
+    }
+}
+
+// Like Post
+export const likePost = async (req, res) => {
+    try {
+        const { userId } = req.auth()
+        const { postId } = req.body
+
+        const post = await Post.findById(postId)
+        if (!post) {
+            return res.json({ success: false, message: 'Post not found' })
+        }
+
+        if (post.likes_count.includes(userId)) {
+            post.likes_count = post.likes_count.filter((user) => user !== userId)
+            await post.save()
+            res.json({ success: true, message: 'Post unliked' })
+        } else {
+            post.likes_count.push(userId)
+            await post.save()
+            res.json({ success: true, message: 'Post liked' })
+        }
+
+    } catch (error) {
+        console.log(error)
+        res.json({ success: false, message: error.message })
+    }
+}
