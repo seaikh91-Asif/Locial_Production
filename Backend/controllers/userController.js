@@ -2,6 +2,8 @@ import imagekit from "../configs/imagekit.js"
 import User from "../src/models/User.js"
 import Connection from "../src/models/Connection.js"
 import fs from 'fs'
+import { profile } from "console"
+import Post from "../src/models/Post.js"
 
 // Get User data using userId
 export const getUserData = async (req, res) => {
@@ -238,6 +240,27 @@ export const acceptConnectionRequest = async (req, res) => {
         await connection.save()
 
         res.json({ success: true, message: 'Connection accepted successfully' })
+
+    } catch (error) {
+        console.log(error)
+        res.json({ success: false, message: error.message })
+    }
+}
+
+// Get User profiles
+// Get User profiles
+export const getUserProfiles = async (req, res) => {
+    try {
+        const { profileId } = req.body
+        const profile = await User.findById(profileId)
+
+        if (!profile) {
+            return res.json({ success: false, message: "Profile not found" })
+        }
+
+        const posts = await Post.find({ user: profileId }).populate('user')
+
+        res.json({ success: true, profile, posts })
 
     } catch (error) {
         console.log(error)
