@@ -28,5 +28,12 @@ app.use('/api/message', messageRouter)
 
 const PORT = process.env.PORT || 4000
 
+// Vercel nijei server chalay, tai shudhu local-e listen korbe
+if (!process.env.VERCEL) {
+    app.listen(PORT, () => console.log(`Server is running on port ${PORT}`))
+}
+
+export default app
+
 
 // BACKEND COMPLETE 
