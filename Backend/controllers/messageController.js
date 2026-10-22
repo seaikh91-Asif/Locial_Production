@@ -78,3 +78,26 @@ export const sendMessage = async (req, res) => {
         res.json({ success: false, message: error.message })
     }
 }
+
+// Get Chat Messages
+export const getChatMessage = async (req, res) => {
+    try {
+        const { userId } = req.auth()
+        const { to_user_id } = req.body
+
+        const messages = await Message.find({
+            $or: [
+                { from_user_id: userId, to_user_id },
+                { from_user_id: to_user_id, to_user_id: userId },
+            ]
+        }).sort({ createdAt: -1 })
+
+        // Mark messages as seen
+        await Message.updateMany({ from_user_id: to_user_id, to_user_id: userId }, { seen: true })
+
+        res.json({ success: true, messages })
+    } catch (error) {
+        console.log(error)
+        res.json({ success: false, message: error.message })
+    }
+}
