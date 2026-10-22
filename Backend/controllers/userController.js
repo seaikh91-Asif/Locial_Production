@@ -4,6 +4,7 @@ import Connection from "../src/models/Connection.js"
 import fs from 'fs'
 import { profile } from "console"
 import Post from "../src/models/Post.js"
+import { inngest } from "../inngest/index.js"
 
 // Get User data using userId
 export const getUserData = async (req, res) => {
@@ -173,10 +174,16 @@ export const sendConnectionRequest = async (req, res) => {
         })
 
         if (!connection) {
-            await Connection.create({
+            const newConnection = await Connection.create({
                 from_user_id: userId,
                 to_user_id: id
             })
+
+            await inngest.send({
+                name: 'app/connection-request',
+                data: {connectionId: newConnection._id}
+            })
+
             return res.json({ success: true, message: 'Connection request sent successfully' })
         } else if (connection.status === 'accepted') {
             return res.json({ success: false, message: 'You are already connected with this user' })
@@ -247,7 +254,7 @@ export const acceptConnectionRequest = async (req, res) => {
     }
 }
 
-// Get User profiles
+
 // Get User profiles
 export const getUserProfiles = async (req, res) => {
     try {
