@@ -3,6 +3,7 @@ import User from '../src/models/User.js'
 import Connection from '../src/models/Connection.js'
 import sendEmail from '../configs/nodeMailer.js'
 import Story from '../src/models/Story.js'
+import Message from '../src/models/Message.js'
 
 export const inngest = new Inngest({ id: 'locial-app' })
 
@@ -129,10 +130,54 @@ const deleteStory = inngest.createFunction(
     }
 )
 
+   // Send daily notification for unseen messages
+const sendNotificationOfUnseenMessages = inngest.createFunction(
+    { id: 'send-unseen-messages-notification', triggers: { cron: 'TZ=Asia/Kolkata 0 9 * * *' } }, // every day at 9 AM
+    async ({ step }) => {
+        const unseenCount = await step.run('count-unseen-messages', async () => {
+            const messages = await Message.find({ seen: false })
+            const counts = {}
+
+            messages.forEach((message) => {
+                counts[message.to_user_id] = (counts[message.to_user_id] || 0) + 1
+            })
+
+            return counts
+        })
+
+        for (const userId in unseenCount) {
+            await step.run(`send-email-${userId}`, async () => {
+                const user = await User.findById(userId)
+                if (!user) return { message: 'User not found' }
+
+                const subject = `📬 You have ${unseenCount[userId]} unseen messages`
+
+                const body = `
+                    <div style="font-family: Arial, sans-serif; padding: 20px;">
+                        <h2>Hi ${user.full_name},</h2>
+                        <p>You have ${unseenCount[userId]} unseen messages</p>
+                        <p>Click <a href="${process.env.FRONTEND_URL}/messages" style="color: #10b981;">here</a> to view them</p>
+                        <br/>
+                        <p>Thanks,<br/>Locial - Stay Connected</p>
+                    </div>`
+
+                await sendEmail({
+                    to: user.email,
+                    subject,
+                    body
+                })
+            })
+        }
+
+        return { message: 'Notification sent.' }
+    }
+)
+
 export const functions = [
     syncUserCreation,
     syncUserUpdation,
     syncUserDeletion,
     sendNewConnectionRequestReminder, 
-    deleteStory
+    deleteStory, 
+    sendNotificationOfUnseenMessages
 ]
