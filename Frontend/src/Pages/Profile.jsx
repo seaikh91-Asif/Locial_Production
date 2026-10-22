@@ -1,37 +1,62 @@
 import React, { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { dummyPostsData, dummyUserData } from '../assets/assets'
 import Loding from '../Components/Loding'
 import UserProfileInfo from '../Components/UserProfileInfo'
 import PostCard from '../Components/PostCard'
 import { Link } from 'lucide-react'
 import moment from 'moment'
 import ProfileModel from '../Components/ProfileModel'
+import { useAuth } from '@clerk/react' 
+import api from '../api/axios'
+import { useSelector } from 'react-redux'
+import toast from 'react-hot-toast' 
 
 const Profile = () => {
+
+  
+  const currentUser = useSelector((state) => state.user?.value) 
+
+  const { getToken } = useAuth()
   const { profileId } = useParams()
   const [user, setUser] = useState(null)
   const [posts, setPosts] = useState([])
   const [activeTab, setActiveTab] = useState('post')
   const [showEdit, setShowEdit] = useState(false)
 
-  const fetchUser = async () => {
-  setUser(dummyUserData)
-  setPosts(dummyPostsData)
-}
+  const fetchUser = async (id) => { 
+    try {
+      const token = await getToken()
+      const { data } = await api.post(`/api/user/profiles`, { profileId: id }, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      
+      if(data.success){
+        setUser(data.profile)
+        setPosts(data.posts)
+      } else {
+        toast.error(data.message)
+      }
+    } catch (error) {
+      toast.error(error.message)
+    }
+  }
 
   useEffect(() => {
-    fetchUser()
-  },[])
+    if (profileId) {
+      fetchUser(profileId)
+    } else if (currentUser?._id) { 
+      fetchUser(currentUser._id)
+    }
+  }, [profileId, currentUser])
 
   return user ? (
     <div className='relative h-full overflow-y-scroll bg-gray-50 p-6'>
-      <div className=' max-w-3xl mx-auto'>
+      <div className='max-w-3xl mx-auto'>
         {/* Profile Card */}
         <div className='bg-white rounded-2xl shadow overflow-hidden '>
           {/* Cover Image */}
           <div className='h-40 md:h-56 bg-linear-to-r from-indigo-200 via-purple-200 to-pink-200'>
-            {user.cover_photo && <img src = {user.cover_photo} alt='' className=' w-full h-full object-cover'/> }
+            {user?.cover_photo && <img src={user.cover_photo} alt='' className='w-full h-full object-cover'/> }
           </div>
 
           {/* User Info */}
@@ -47,10 +72,11 @@ const Profile = () => {
               </button>
             )) }
           </div>
+          
           {/* Posts */}
           {activeTab === 'post' && (
           <div className='mt-6 flex flex-col items-center gap-6'>
-            {posts.map((post) => <PostCard key={post._id} post={post} />)}
+            {posts?.map((post) => <PostCard key={post._id} post={post} />)}
           </div>
           )}
 
@@ -58,7 +84,7 @@ const Profile = () => {
           {activeTab === 'media' && (
             <div className='flex flex-wrap mt-6 max-w-6xl'>
               {posts
-                .filter((post) => post.image_urls?.length > 0)
+                ?.filter((post) => post.image_urls?.length > 0)
                 .map((post) => (
                   <React.Fragment key={post._id}>
                     {post.image_urls.map((img, index) => (
@@ -75,6 +101,7 @@ const Profile = () => {
           )}  
         </div>
       </div>
+      
       {/* Edit profile Model */}
       {showEdit && <ProfileModel setShowEdit={setShowEdit}/>}
     </div>
