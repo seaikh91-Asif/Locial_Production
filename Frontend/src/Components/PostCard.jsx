@@ -3,65 +3,104 @@ import { BadgeCheck, Dot, Heart, MessageCircle, Share2 } from 'lucide-react'
 import moment from 'moment'
 import { useNavigate } from 'react-router-dom'
 import { useSelector } from 'react-redux'
+import { useAuth } from '@clerk/react'
+import toast from 'react-hot-toast'
+import api from '../api/axios.js'
 
-const PostCard = ({post}) => {
-    // Optional chaining ব্যবহার করা হয়েছে
-    const postWithHashtags = post?.content?.replace(/(#\w+)/g, '<span class="text-indigo-600">$1</span>') || ''
-    
-    // likes_count যদি Array না হয়ে থাকে, তবে API থেকে Array (যেমন post.likes) রিসিভ করা উচিত। আপাতত একটি ডিফল্ট এম্পটি অ্যারে [] দেওয়া হলো।
-    const [likes, setLikes] = useState(post?.likes || []) 
+const PostCard = ({ post }) => {
+
+    const [likes, setLikes] = useState(post?.likes_count || [])
     const currentUser = useSelector((state) => state.user?.value)
+    const { getToken } = useAuth()
+    const navigate = useNavigate()
+
+    const isLiked = currentUser?._id && likes.includes(currentUser._id)
+
+    // Hashtag-ke React element hishebe render kori, tai HTML inject hoy na
+    const renderContent = (text) =>
+        text.split(/(#\w+)/g).map((part, i) =>
+            /^#\w+$/.test(part)
+                ? <span key={i} className='text-indigo-600'>{part}</span>
+                : part
+        )
 
     const handleLike = async () => {
-        // লাইক হ্যান্ডেল করার লজিক
-    }
+    if (!currentUser?._id) return
 
-    const navigate = useNavigate()
+    try {
+        const token = await getToken()
+        const { data } = await api.post('/api/post/like', { postId: post._id }, {
+            headers: { Authorization: `Bearer ${token}` }
+        })
+
+        if (data.success) {
+            toast.success(data.message)
+            setLikes((prev) =>
+                prev.includes(currentUser._id)
+                    ? prev.filter((id) => id !== currentUser._id)
+                    : [...prev, currentUser._id]
+            )
+        } else {
+            toast.error(data.message)
+        }
+        } catch (error) {
+            toast.error(error.message)
+        }
+    }
 
     return (
         <div className='bg-white rounded-xl shadow p-4 space-y-4 w-full max-w-2xl'>
             {/* User Info */}
             <div onClick={() => post?.user?._id && navigate('/profile/' + post.user._id)} className='inline-flex items-center gap-3 cursor-pointer'>
-                <img src={post?.user?.profile_picture || 'default-avatar-url'} alt="" className='w-10 h-10 rounded-full shadow' />
+                <img src={post?.user?.profile_picture} alt="" className='w-10 h-10 rounded-full object-cover shadow' />
                 <div>
                     <div className='flex items-center space-x-1'>
                         <span>{post?.user?.full_name || 'Unknown User'}</span>
-                        <BadgeCheck className=' w-4 h-4 text-blue-500'/> 
+                        <BadgeCheck className='w-4 h-4 text-blue-500' />
                     </div>
                     <div className='flex items-center text-gray-500 text-sm'>
-                        @{post?.user?.username || 'unknown'} <Dot className='w-4 h-4'/> {post?.createdAt ? moment(post.createdAt).fromNow() : ''}
+                        @{post?.user?.username || 'unknown'} <Dot className='w-4 h-4' /> {post?.createdAt ? moment(post.createdAt).fromNow() : ''}
                     </div>
                 </div>
             </div>
 
             {/* Content */}
-            {post?.content && <div className='text-gray-800 text-sm whitespace-pre-line ' dangerouslySetInnerHTML={{__html: postWithHashtags}} /> }
+            {post?.content && (
+                <div className='text-gray-800 text-sm whitespace-pre-line'>
+                    {renderContent(post.content)}
+                </div>
+            )}
 
             {/* Images */}
-            <div className='grid grid-cols-2 gap-2'>
-                {/* অপশনাল চেইনিং (?.) ব্যবহার করে map করা হয়েছে */}
-                {post?.image_urls?.map((img, index)=>(
-                    <img src={img} key={index} className={`w-full h-48 object-cover rounded-lg ${post.image_urls.length === 1 ? 'col-span-2 h-auto' : ''}`} alt="" />
-                ))}
-            </div>
+            {post?.image_urls?.length > 0 && (
+                <div className='grid grid-cols-2 gap-2'>
+                    {post.image_urls.map((img, index) => (
+                        <img
+                            src={img}
+                            key={index}
+                            className={`w-full object-cover rounded-lg ${post.image_urls.length === 1 ? 'col-span-2 h-auto' : 'h-48'}`}
+                            alt=""
+                        />
+                    ))}
+                </div>
+            )}
 
             {/* Action buttons */}
             <div className='flex items-center gap-4 text-gray-600 text-sm pt-2 border-t border-gray-300'>
                 <div className='flex items-center gap-1'>
-                    {/* currentUser null কিনা তা চেক করা হয়েছে */}
-                    <Heart 
-                        className={`w-4 h-4 cursor-pointer ${currentUser?._id && likes?.includes(currentUser._id) ? 'text-red-500 fill-red-500' : ''}`} 
+                    <Heart
+                        className={`w-4 h-4 cursor-pointer ${isLiked ? 'text-red-500 fill-red-500' : ''}`}
                         onClick={handleLike}
-                    /> 
-                    <span>{likes?.length || 0}</span>
+                    />
+                    <span>{likes.length}</span>
                 </div>
                 <div className='flex items-center gap-1'>
-                    <MessageCircle className='w-4 h-4 '/>
-                    <span>{post?.comments?.length || 12}</span>
+                    <MessageCircle className='w-4 h-4' />
+                    <span>{post?.comments?.length || 0}</span>
                 </div>
                 <div className='flex items-center gap-1'>
-                    <Share2 className='w-4 h-4 '/>
-                    <span>{post?.shares || 7}</span>
+                    <Share2 className='w-4 h-4' />
+                    <span>{post?.shares || 0}</span>
                 </div>
             </div>
         </div>
