@@ -26,20 +26,25 @@ export const addUserStory = async (req, res) => {
             media_url = response.url
         }
 
-        // Create story
-        await Story.create({
+                // Create story
+        const story = await Story.create({
             user: userId,
             content,
             media_url,
             media_type,
             background_color
         })
-        
-        // Schedule story deletion after 24 Hours
-        await inngest.send({
-            name: 'app/story-delete', 
-            date: {storyId: story._id}
-        })
+
+        // Schedule story deletion after 24 hours
+        try {
+            await inngest.send({
+                name: 'app/story.delete',
+                data: { storyId: story._id.toString() }
+            })
+        } catch (err) {
+            console.log('Inngest send failed:', err.message)
+        }
+
         res.json({ success: true, message: 'Story added successfully' })
 
     } catch (error) {
@@ -47,7 +52,6 @@ export const addUserStory = async (req, res) => {
         res.json({ success: false, message: error.message })
     }
 }
-
 // Get User Stories
 export const getStories = async (req, res) => {
     try {
