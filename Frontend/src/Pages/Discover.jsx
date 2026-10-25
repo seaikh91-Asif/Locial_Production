@@ -5,6 +5,7 @@ import toast from 'react-hot-toast'
 import UserCard from '../Components/UserCard'
 import Loding from '../Components/Loding'
 import api from '../api/axios'
+import { useNavigate } from 'react-router-dom'
 
 const Discover = () => {
 
@@ -12,6 +13,7 @@ const Discover = () => {
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(false)
   const { getToken } = useAuth()
+  const navigate = useNavigate()
 
   const fetchUsers = async (searchText = '') => {
     try {
@@ -72,10 +74,17 @@ const Discover = () => {
           </div>
         </div>
 
+        
         {/* Users */}
         <div className='flex flex-wrap gap-6'>
           {users.map((user) => (
-            <UserCard user={user} key={user._id} />
+            <div 
+              key={user._id} 
+              onClick={() => navigate(`/profile/${user._id}`)} 
+              className='cursor-pointer hover:opacity-90 transition-opacity'
+            >
+              <UserCard user={user} />
+            </div>
           ))}
         </div>
 
