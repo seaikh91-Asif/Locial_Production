@@ -7,12 +7,14 @@ import toast from 'react-hot-toast'
 import api from '../api/axios'
 import { fetchUser } from '../features/user/userSlice'
 import { fetchConnections } from '../features/connections/connectionSlice'
+import { Navigate } from 'react-router-dom'
 
 const UserCard = ({ user }) => {
     const currentUser = useSelector((state) => state.user.value)
     const dispatch = useDispatch()
     const navigate = useNavigate()
     const { getToken } = useAuth()
+    
 
     const [followersCount, setFollowersCount] = useState(user.followers?.length || 0)
     const [requestSent, setRequestSent] = useState(false)
@@ -77,7 +79,7 @@ const UserCard = ({ user }) => {
     return (
         <div className='p-4 pt-6 flex flex-col justify-between w-72 shadow border border-gray-200 rounded-md bg-white'>
             <div className='text-center'>
-                <img className='rounded-full w-16 h-16 object-cover shadow-md mx-auto' src={user.profile_picture} alt="" />
+                <img onClick={() => navigate(`/profile/${user._id}`)} className='cursor-pointer rounded-full w-16 h-16 object-cover shadow-md mx-auto' src={user.profile_picture} alt="" />
                 <p className='mt-4 font-semibold'>{user.full_name}</p>
                 {user.username && <p className='text-gray-500 font-light'>@{user.username}</p>}
                 {user.bio && <p className='text-gray-600 mt-2 text-center text-sm px-4'>{user.bio}</p>}
