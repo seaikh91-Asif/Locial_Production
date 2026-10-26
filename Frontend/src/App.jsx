@@ -1,5 +1,5 @@
-import React from 'react'
-import { Routes, Route } from 'react-router-dom'
+import React, { useEffect, useRef } from 'react'
+import { Routes, Route, useLocation } from 'react-router-dom'
 import Login from './Pages/Login.jsx'
 import Feed from './Pages/Feed.jsx'
 import Messages from './Pages/Messages.jsx'
@@ -8,51 +8,83 @@ import Connections from './Pages/Connections.jsx'
 import Discover from './Pages/Discover.jsx'
 import Profile from './Pages/Profile.jsx'
 import CreatePost from './Pages/CreatePost.jsx'
-import {useUser, useAuth} from '@clerk/react'
+import { useUser, useAuth } from '@clerk/react'
 import Layout from './Pages/Layout.jsx'
-import {Toaster} from 'react-hot-toast'
-import { useEffect } from 'react'
+import toast, { Toaster } from 'react-hot-toast'
 import { useDispatch } from 'react-redux'
 import { fetchUser } from './features/user/userSlice.js'
 import { fetchConnections } from './features/connections/connectionSlice.js'
+import { addMessage } from './features/messages/messagesSlice.js'
 
 const App = () => {
 
-  const {user} = useUser(); 
-  const {getToken} = useAuth()
+  const { user } = useUser()
+  const { getToken } = useAuth()
   const dispatch = useDispatch()
-  
- useEffect(()=>{
-  const fetchData = async () => {
-    if(user){
-    const token = await getToken()
-    dispatch(fetchUser(token))
-    dispatch(fetchConnections(token))
+  const { pathname } = useLocation()
+  const pathnameRef = useRef(pathname)
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (user) {
+        const token = await getToken()
+        dispatch(fetchUser(token))
+        dispatch(fetchConnections(token))
+      }
     }
-  }
 
-  fetchData()
+    fetchData()
+  }, [user, getToken, dispatch])
 
-},[user, getToken, dispatch])
+  useEffect(() => {
+    pathnameRef.current = pathname
+  }, [pathname])
+
+  useEffect(() => {
+    if (!user) return
+
+    const eventSource = new EventSource(import.meta.env.VITE_BASEURL + '/api/message/' + user.id)
+
+    eventSource.onmessage = (event) => {
+      try {
+        const message = JSON.parse(event.data)
+        const fromId = message.from_user_id?._id || message.from_user_id
+
+        if (pathnameRef.current === '/messages/' + fromId) {
+          // oi user-er chat khola ache, message sorasori dekhao
+          dispatch(addMessage(message))
+        } else {
+          // onno page-e thakle notification dao
+          const sender = message.from_user_id?.full_name || 'Someone'
+          toast(`${sender}: ${message.text || 'sent a photo'}`, { icon: '💬' })
+        }
+      } catch {
+        // prothom "connected" event JSON na, ignore
+      }
+    }
+
+    return () => {
+      eventSource.close()
+    }
+  }, [user, dispatch])
 
   return (
     <>
-      <Toaster/>
+      <Toaster />
       <Routes>
-          <Route path='/' element= { !user ? <Login/> : <Layout/>}>
-          <Route index element={<Feed/>}/>
-          <Route path='messages' element={<Messages/>}/>
-          <Route path='messages/:userId' element={<ChatBox/>}/>
-          <Route path='connections' element={<Connections/>}/>
-          <Route path='discover' element={<Discover/>}/>
-          <Route path='profile' element={<Profile/>}/>
-          <Route path='profile/:profileId' element={<Profile/>}/>
-          <Route path='create-post' element={<CreatePost/>}/>
+        <Route path='/' element={!user ? <Login /> : <Layout />}>
+          <Route index element={<Feed />} />
+          <Route path='messages' element={<Messages />} />
+          <Route path='messages/:userId' element={<ChatBox />} />
+          <Route path='connections' element={<Connections />} />
+          <Route path='discover' element={<Discover />} />
+          <Route path='profile' element={<Profile />} />
+          <Route path='profile/:profileId' element={<Profile />} />
+          <Route path='create-post' element={<CreatePost />} />
         </Route>
       </Routes>
-  </>
+    </>
   )
 }
 
 export default App
-// FRONTEND OF THE APPLICATION IS FINISH 
