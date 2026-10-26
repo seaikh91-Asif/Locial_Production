@@ -5,8 +5,9 @@ const initialState = {
     messages: [],
 }
 
-const sortByDate = (list) =>
-    [...list].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+// _id diye sort: Atlas-e hat diye insert kora message-eo (createdAt chhara) thik order-e ashe
+const sortById = (list) =>
+    [...list].sort((a, b) => String(a._id).localeCompare(String(b._id)))
 
 // Ekta chat-er purono message backend theke ana
 export const fetchMessages = createAsyncThunk('messages/fetchMessages', async ({ token, userId }) => {
@@ -37,7 +38,7 @@ const messagesSlice = createSlice({
     extraReducers: (builder) => {
         builder.addCase(fetchMessages.fulfilled, (state, action) => {
             if (action.payload) {
-                state.messages = sortByDate(action.payload.messages)
+                state.messages = sortById(action.payload.messages)
             }
         })
     },

@@ -46,16 +46,16 @@ const ChatBox = () => {
   }, [userId, connections])
 
   // Purono message ana
-  const loadMessages = async () => {
-    try {
-      const token = await getToken()
-      dispatch(fetchMessages({ token, userId }))
-    } catch (error) {
-      toast.error(error.message)
-    }
-  }
-
   useEffect(() => {
+    const loadMessages = async () => {
+      try {
+        const token = await getToken()
+        dispatch(fetchMessages({ token, userId }))
+      } catch (error) {
+        toast.error(error.message)
+      }
+    }
+
     dispatch(resetMessages())
     loadMessages()
 
@@ -64,41 +64,10 @@ const ChatBox = () => {
     }
   }, [userId])
 
-  // Live message: SSE, fail hole 5 second por por refresh
-  useEffect(() => {
-    if (!currentUser?._id) return
-
-    const source = new EventSource(`${import.meta.env.VITE_BASEURL}/api/message/${currentUser._id}`)
-    let pollId
-
-    source.onmessage = (e) => {
-      try {
-        const message = JSON.parse(e.data)
-        const fromId = message.from_user_id?._id || message.from_user_id
-        // shudhu ei chat-er message dekhao
-        if (fromId === userId) {
-          dispatch(addMessage(message))
-        }
-      } catch {
-        // prothom "connected" event JSON na
-      }
-    }
-
-    source.onerror = () => {
-      source.close()
-      pollId = setInterval(loadMessages, 5000)
-    }
-
-    return () => {
-      source.close()
-      clearInterval(pollId)
-    }
-  }, [currentUser?._id, userId])
-
-  // Notun message-e niche scroll
+  // Notun message-e niche scroll (shudhu songkhya bodlale)
   useEffect(() => {
     messageEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+  }, [messages.length])
 
   const handleImageChange = (e) => {
     const file = e.target.files?.[0]

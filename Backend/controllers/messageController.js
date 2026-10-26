@@ -23,9 +23,11 @@ export const sseController = (req, res) => {
     // Send an initial event to the client
     res.write('data: connected to SSE stream\n\n')
 
-    // Handle client disconnect
+    // Handle client disconnect (shudhu nijer connection-i muchbe)
     req.on('close', () => {
-        delete connections[userId]
+        if (connections[userId] === res) {
+            delete connections[userId]
+        }
         console.log('Client disconnected')
     })
 }
@@ -64,22 +66,21 @@ export const sendMessage = async (req, res) => {
             media_url
         })
 
-        // Send message to to_user_id using SSE
-        const messageWithUserData = await Message.findById(message._id).populate('from_user_id')
+        const messageWithUserData = await Message.findById(message._id).populate('from_user_id', '-email')
 
+        // Send message to to_user_id using SSE
         if (connections[to_user_id]) {
             connections[to_user_id].write(`data: ${JSON.stringify(messageWithUserData)}\n\n`)
         }
 
         res.json({ success: true, message: messageWithUserData })
-
     } catch (error) {
         console.log(error)
         res.json({ success: false, message: error.message })
     }
 }
 
-// Get Chat Messages
+// Get Chat Messages (purono theke notun order-e)
 export const getChatMessage = async (req, res) => {
     try {
         const { userId } = req.auth()
@@ -90,7 +91,7 @@ export const getChatMessage = async (req, res) => {
                 { from_user_id: userId, to_user_id },
                 { from_user_id: to_user_id, to_user_id: userId },
             ]
-        }).sort({ createdAt: -1 })
+        }).sort({ _id: 1 })
 
         // Mark messages as seen
         await Message.updateMany({ from_user_id: to_user_id, to_user_id: userId }, { seen: true })
@@ -107,8 +108,9 @@ export const getUserRecentMessage = async (req, res) => {
     try {
         const { userId } = req.auth()
         const messages = await Message.find({ to_user_id: userId })
-            .populate('from_user_id to_user_id')
-            .sort({ createdAt: -1 })
+            .populate('from_user_id to_user_id', '-email')
+            .sort({ _id: -1 })
+            .limit(50)
 
         res.json({ success: true, messages })
     } catch (error) {
