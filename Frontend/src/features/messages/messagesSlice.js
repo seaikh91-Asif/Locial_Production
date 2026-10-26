@@ -1,13 +1,48 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
+import api from '../../api/axios'
 
 const initialState = {
-    messages: [] 
-};
+    messages: [],
+}
+
+const sortByDate = (list) =>
+    [...list].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+
+// Ekta chat-er purono message backend theke ana
+export const fetchMessages = createAsyncThunk('messages/fetchMessages', async ({ token, userId }) => {
+    const { data } = await api.post('/api/message/get', { to_user_id: userId }, {
+        headers: { Authorization: `Bearer ${token}` }
+    })
+    return data.success ? data : null
+})
 
 const messagesSlice = createSlice({
-    name: 'messages', 
-    initialState, 
-    reducers: {}
-});
+    name: 'messages',
+    initialState,
+    reducers: {
+        setMessages: (state, action) => {
+            state.messages = action.payload
+        },
+        addMessage: (state, action) => {
+            // ekoi message object (ekoi _id) duibar dhukbe na
+            const exists = state.messages.some((m) => m._id && m._id === action.payload._id)
+            if (!exists) {
+                state.messages = [...state.messages, action.payload]
+            }
+        },
+        resetMessages: (state) => {
+            state.messages = []
+        },
+    },
+    extraReducers: (builder) => {
+        builder.addCase(fetchMessages.fulfilled, (state, action) => {
+            if (action.payload) {
+                state.messages = sortByDate(action.payload.messages)
+            }
+        })
+    },
+})
 
-export default messagesSlice.reducer;
+export const { setMessages, addMessage, resetMessages } = messagesSlice.actions
+
+export default messagesSlice.reducer
