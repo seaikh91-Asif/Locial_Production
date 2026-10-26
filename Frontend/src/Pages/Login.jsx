@@ -21,11 +21,11 @@ const Login = () => {
               <div className='flex'>
                 {Array(5).fill(0).map((_, i) => (<Star key={i} className='size-4 md:size-4.5 text-transparent fill-amber-500'/>))}
               </div>
-              <p>Used by 69k+ developers</p>
+              <p>Used by Many Players</p>
             </div>
           </div>
-          <h1 className='text-3xl md:text-6xl md:pb-2 font-bold space-y-1 bg-linear-to-r from-indigo-950 to-indigo-800 bg-clip-text text-transparent '>More then just friends truly connect</h1>
-          <p className='text-lg md:text-xl  text-indigo-900 max-w-72 md:max-w-md'>connect with global community on Locial</p>
+          <h1 className='text-3xl md:text-6xl md:pb-2 font-bold bg-linear-to-r from-indigo-950 to-indigo-800 bg-clip-text text-transparent'>Our Unofficial Campus Zone</h1>
+          <p className='text-lg md:text-xl  text-indigo-900 max-w-72 md:max-w-md'>What happens in the Campus, stays on Locial.</p>
         </div>
         <span className='md:h-10'></span>
       </div>
