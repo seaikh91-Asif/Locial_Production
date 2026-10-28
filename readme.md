@@ -314,9 +314,7 @@ The backend exports the Express `app` and only calls `listen()` outside Vercel, 
  
 Add screenshots of the Feed, Discover, Connections, Chat and Profile pages here.
  
-```md
 ![Locial Preview](./Frontend/public/Locial_preview_img.png)
-```
  
 ---
  
