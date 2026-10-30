@@ -6,10 +6,14 @@ import { useSelector } from 'react-redux'
 import { useAuth } from '@clerk/react'
 import toast from 'react-hot-toast'
 import api from '../api/axios.js'
+import CommentSection from './CommentSection.jsx'
 
 const PostCard = ({ post }) => {
 
     const [likes, setLikes] = useState(post?.likes_count || [])
+    const [commentsCount, setCommentsCount] = useState(post?.comments_count || 0)
+    const [showComments, setShowComments] = useState(false)
+
     const currentUser = useSelector((state) => state.user?.value)
     const { getToken } = useAuth()
     const navigate = useNavigate()
@@ -25,24 +29,24 @@ const PostCard = ({ post }) => {
         )
 
     const handleLike = async () => {
-    if (!currentUser?._id) return
+        if (!currentUser?._id) return
 
-    try {
-        const token = await getToken()
-        const { data } = await api.post('/api/post/like', { postId: post._id }, {
-            headers: { Authorization: `Bearer ${token}` }
-        })
+        try {
+            const token = await getToken()
+            const { data } = await api.post('/api/post/like', { postId: post._id }, {
+                headers: { Authorization: `Bearer ${token}` }
+            })
 
-        if (data.success) {
-            toast.success(data.message)
-            setLikes((prev) =>
-                prev.includes(currentUser._id)
-                    ? prev.filter((id) => id !== currentUser._id)
-                    : [...prev, currentUser._id]
-            )
-        } else {
-            toast.error(data.message)
-        }
+            if (data.success) {
+                toast.success(data.message)
+                setLikes((prev) =>
+                    prev.includes(currentUser._id)
+                        ? prev.filter((id) => id !== currentUser._id)
+                        : [...prev, currentUser._id]
+                )
+            } else {
+                toast.error(data.message)
+            }
         } catch (error) {
             toast.error(error.message)
         }
@@ -94,15 +98,29 @@ const PostCard = ({ post }) => {
                     />
                     <span>{likes.length}</span>
                 </div>
-                <div className='flex items-center gap-1'>
+
+                <button
+                    onClick={() => setShowComments((prev) => !prev)}
+                    className={`flex items-center gap-1 cursor-pointer ${showComments ? 'text-indigo-600' : ''}`}
+                >
                     <MessageCircle className='w-4 h-4' />
-                    <span>{post?.comments?.length || 0}</span>
-                </div>
+                    <span>{commentsCount}</span>
+                </button>
+
                 <div className='flex items-center gap-1'>
                     <Share2 className='w-4 h-4' />
                     <span>{post?.shares || 0}</span>
                 </div>
             </div>
+
+            {/* Comments */}
+            {showComments && (
+                <CommentSection
+                    postId={post._id}
+                    postOwnerId={post?.user?._id}
+                    onCountChange={setCommentsCount}
+                />
+            )}
         </div>
     )
 }
