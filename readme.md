@@ -8,7 +8,7 @@ Built with **React**, **Express**, **MongoDB**, **Clerk**, **Inngest** and **Ima
 
 ---
  
-## Screenshots
+## Preview Image
  
 📸 Application Preview: A sneak peek into Locial's user interface, including the Feed, Discover, Connections, Chat, and Profile pages.
  
@@ -320,9 +320,9 @@ The backend exports the Express `app` and only calls `listen()` outside Vercel, 
 - [ ] Block and report users
 ---
  
-## Screenshots
+## Preview Image
  
-Add screenshots of the Feed, Discover, Connections, Chat and Profile pages here.
+📸 Application Preview: A sneak peek into Locial's user interface, including the Feed, Discover, Connections, Chat, and Profile pages.
  
 ![Locial Preview](./Frontend/public/Locial_preview_img.png)
  
