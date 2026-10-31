@@ -15,9 +15,11 @@ import { useDispatch } from 'react-redux'
 import { fetchUser } from './features/user/userSlice.js'
 import { fetchConnections } from './features/connections/connectionSlice.js'
 import { addMessage } from './features/messages/messagesSlice.js'
+import { useTheme } from './context/ThemeContext.jsx'
 
 const App = () => {
 
+  const { isDark } = useTheme()
   const { user } = useUser()
   const { getToken } = useAuth()
   const dispatch = useDispatch()
@@ -70,7 +72,11 @@ const App = () => {
 
   return (
     <>
-      <Toaster />
+      <Toaster
+        toastOptions={isDark ? {
+          style: { background: '#151b2e', color: '#f1f5fb', border: '1px solid #263150' },
+        } : undefined}
+      />
       <Routes>
         <Route path='/' element={!user ? <Login /> : <Layout />}>
           <Route index element={<Feed />} />
