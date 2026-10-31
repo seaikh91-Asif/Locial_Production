@@ -1,9 +1,10 @@
 import { Inngest } from 'inngest'
 import User from '../src/models/User.js'
 import Connection from '../src/models/Connection.js'
-import sendEmail from '../configs/nodeMailer.js'
-import Story from '../src/models/Story.js'
 import Message from '../src/models/Message.js'
+import Story from '../src/models/Story.js'
+import sendEmail from '../configs/nodeMailer.js'
+import { deleteImageKitFiles } from '../configs/deleteImages.js'
 
 export const inngest = new Inngest({ id: 'locial-app' })
 
@@ -114,25 +115,29 @@ const sendNewConnectionRequestReminder = inngest.createFunction(
     }
 )
 
-// Delete story after 24 hours
-const deleteStory = inngest.createFunction(
-    { id: 'story-delete', triggers: { event: 'app/story.delete' } },
-    async ({ event, step }) => {
-        const { storyId } = event.data
-        const in24Hours = new Date(Date.now() + 24 * 60 * 60 * 1000)
+// Every hour: delete stories older than 24 hours (database + ImageKit files)
+const cleanupExpiredStories = inngest.createFunction(
+    { id: 'cleanup-expired-stories', triggers: { cron: '0 * * * *' } },
+    async ({ step }) => {
+        return await step.run('delete-expired-stories', async () => {
+            const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000)
 
-        await step.sleepUntil('wait-for-24-hours', in24Hours)
+            const expired = await Story.find({ createdAt: { $lt: cutoff } }).select('_id media_file_id')
+            if (expired.length === 0) {
+                return { deleted: 0 }
+            }
 
-        await step.run('delete-story', async () => {
-            await Story.findByIdAndDelete(storyId)
-            return { message: 'story deleted.' }
+            await deleteImageKitFiles(expired.map((story) => story.media_file_id))
+            await Story.deleteMany({ _id: { $in: expired.map((story) => story._id) } })
+
+            return { deleted: expired.length }
         })
     }
 )
 
-   // Send daily notification for unseen messages
+// Daily email for unseen messages
 const sendNotificationOfUnseenMessages = inngest.createFunction(
-    { id: 'send-unseen-messages-notification', triggers: { cron: 'TZ=Asia/Kolkata 0 9 * * *' } }, // every day at 9 AM
+    { id: 'send-unseen-messages-notification', triggers: { cron: 'TZ=Asia/Kolkata 0 9 * * *' } }, // every day at 9 AM IST
     async ({ step }) => {
         const unseenCount = await step.run('count-unseen-messages', async () => {
             const messages = await Message.find({ seen: false })
@@ -177,7 +182,7 @@ export const functions = [
     syncUserCreation,
     syncUserUpdation,
     syncUserDeletion,
-    sendNewConnectionRequestReminder, 
-    deleteStory, 
-    sendNotificationOfUnseenMessages
+    sendNewConnectionRequestReminder,
+    cleanupExpiredStories,
+    sendNotificationOfUnseenMessages,
 ]
