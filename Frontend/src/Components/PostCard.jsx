@@ -119,15 +119,26 @@ const PostCard = ({ post, onDelete }) => {
         <div className='bg-white rounded-xl shadow p-4 space-y-4 w-full max-w-2xl'>
             {/* User Info + three dots menu */}
             <div className='flex items-start justify-between gap-2'>
-                <div onClick={() => post?.user?._id && navigate('/profile/' + post.user._id)} className='inline-flex items-center gap-3 cursor-pointer'>
-                    <img src={post?.user?.profile_picture} alt="" className='w-10 h-10 rounded-full object-cover shadow' />
-                    <div>
-                        <div className='flex items-center space-x-1'>
-                            <span>{post?.user?.full_name || 'Unknown User'}</span>
-                            <BadgeCheck className='w-4 h-4 text-blue-500' />
+                <div
+                    onClick={() => post?.user?._id && navigate('/profile/' + post.user._id)}
+                    className='flex items-center gap-3 cursor-pointer min-w-0'
+                >
+                    <img
+                        src={post?.user?.profile_picture}
+                        alt=""
+                        className='w-10 h-10 rounded-full object-cover shadow shrink-0'
+                    />
+                    <div className='min-w-0'>
+                        <div className='flex items-center gap-1'>
+                            <span className='truncate'>{post?.user?.full_name || 'Unknown User'}</span>
+                            <BadgeCheck className='w-4 h-4 text-blue-500 shrink-0' />
                         </div>
-                        <div className='flex items-center text-gray-500 text-sm'>
-                            @{post?.user?.username || 'unknown'} <Dot className='w-4 h-4' /> {post?.createdAt ? moment(post.createdAt).fromNow() : ''}
+                        <div className='flex items-center text-gray-500 text-sm min-w-0'>
+                            <span className='truncate'>@{post?.user?.username || 'unknown'}</span>
+                            <Dot className='w-4 h-4 shrink-0' />
+                            <span className='whitespace-nowrap shrink-0'>
+                                {post?.createdAt ? moment(post.createdAt).fromNow() : ''}
+                            </span>
                         </div>
                     </div>
                 </div>
