@@ -15,16 +15,17 @@ import { useDispatch } from 'react-redux'
 import { fetchUser } from './features/user/userSlice.js'
 import { fetchConnections } from './features/connections/connectionSlice.js'
 import { addMessage } from './features/messages/messagesSlice.js'
-import { useTheme } from './context/ThemeContext.jsx'
+import Notification from './Components/Notification.jsx'
+import { LightOnly, useTheme } from './context/ThemeContext.jsx'
 
 const App = () => {
 
-  const { isDark } = useTheme()
   const { user } = useUser()
   const { getToken } = useAuth()
   const dispatch = useDispatch()
   const { pathname } = useLocation()
   const pathnameRef = useRef(pathname)
+  const { isDark } = useTheme()
 
   useEffect(() => {
     const fetchData = async () => {
@@ -56,9 +57,9 @@ const App = () => {
           // oi user-er chat khola ache, message sorasori dekhao
           dispatch(addMessage(message))
         } else {
-          // onno page-e thakle notification dao
-          const sender = message.from_user_id?.full_name || 'Someone'
-          toast(`${sender}: ${message.text || 'sent a photo'}`, { icon: '💬' })
+          toast.custom((t) => (
+            <Notification t={t} message={message} />
+          ), { position: 'bottom-right' })
         }
       } catch {
         // prothom "connected" event JSON na, ignore
@@ -72,13 +73,14 @@ const App = () => {
 
   return (
     <>
+      {/* Login page-e toast shobshomoy light, baki page-e theme onujayi */}
       <Toaster
-        toastOptions={isDark ? {
+        toastOptions={isDark && user ? {
           style: { background: '#151b2e', color: '#f1f5fb', border: '1px solid #263150' },
         } : undefined}
       />
       <Routes>
-        <Route path='/' element={!user ? <Login /> : <Layout />}>
+        <Route path='/' element={!user ? <LightOnly><Login /></LightOnly> : <Layout />}>
           <Route index element={<Feed />} />
           <Route path='messages' element={<Messages />} />
           <Route path='messages/:userId' element={<ChatBox />} />
