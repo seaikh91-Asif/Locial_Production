@@ -3,25 +3,44 @@ import { Users, UserPlus, UserCheck, UserRoundPenIcon, MessageSquare } from 'luc
 import { useNavigate } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { useAuth } from '@clerk/react'
+import toast from 'react-hot-toast'
+import api from '../api/axios'
 import { fetchConnections } from '../features/connections/connectionSlice'
 import { fetchUser } from '../features/user/userSlice'
-import api from '../api/axios'
-import toast from 'react-hot-toast'
+
+// Prottek tab-er icon ar rong
+const tabsConfig = [
+  { label: 'Followers', icon: Users, accent: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-300' },
+  { label: 'Following', icon: UserCheck, accent: 'bg-purple-100 text-purple-600 dark:bg-purple-500/20 dark:text-purple-300' },
+  { label: 'Pending', icon: UserRoundPenIcon, accent: 'bg-amber-100 text-amber-600 dark:bg-amber-500/20 dark:text-amber-300' },
+  { label: 'Connections', icon: UserPlus, accent: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-300' },
+]
 
 const Connections = () => {
+
   const [currentTab, setCurrentTab] = useState('Followers')
+
   const navigate = useNavigate()
   const { getToken } = useAuth()
   const dispatch = useDispatch()
 
   const { connections, pendingConnections, followers, following } = useSelector((state) => state.connections)
 
-  const dataArray = [
-    { label: 'Followers', value: followers, icon: Users },
-    { label: 'Following', value: following, icon: UserCheck },
-    { label: 'Pending', value: pendingConnections, icon: UserRoundPenIcon },
-    { label: 'Connections', value: connections, icon: UserPlus },
-  ]
+  const lists = {
+    Followers: followers,
+    Following: following,
+    Pending: pendingConnections,
+    Connections: connections,
+  }
+
+  const dataArray = tabsConfig.map((tab) => ({ ...tab, value: lists[tab.label] || [] }))
+  const currentList = lists[currentTab] || []
+
+  const refreshData = async () => {
+    const token = await getToken()
+    dispatch(fetchConnections(token))
+    dispatch(fetchUser(token))
+  }
 
   const handleUnfollow = async (userId) => {
     try {
@@ -31,8 +50,7 @@ const Connections = () => {
       })
       if (data.success) {
         toast.success(data.message)
-        dispatch(fetchConnections(token))
-        dispatch(fetchUser(token))
+        refreshData()
       } else {
         toast.error(data.message)
       }
@@ -49,8 +67,7 @@ const Connections = () => {
       })
       if (data.success) {
         toast.success(data.message)
-        dispatch(fetchConnections(token))
-        dispatch(fetchUser(token))
+        refreshData()
       } else {
         toast.error(data.message)
       }
@@ -63,111 +80,124 @@ const Connections = () => {
     getToken().then((token) => {
       dispatch(fetchConnections(token))
     })
-  }, [dispatch, getToken])
-
-  const currentList = dataArray.find((item) => item.label === currentTab)?.value || []
+  }, [])
 
   return (
-    <div className='min-h-screen bg-slate-50 w-full max-w-[100vw] overflow-x-hidden flex flex-col'>
-      <div className='max-w-6xl mx-auto w-full p-4 sm:p-6 flex-1 min-w-0'>
-        
-        <div className='mb-6'>
-          <h1 className='text-2xl sm:text-3xl font-bold text-slate-900 mb-1'>Connections</h1>
-          <p className='text-sm text-slate-500'>Manage your network and discover new connections</p>
+    <div className='min-h-screen bg-slate-50'>
+      <div className='max-w-6xl mx-auto p-4 sm:p-6'>
+
+        {/* Title */}
+        <div className='mb-8 pr-14 sm:pr-0'>
+          <h1 className='text-3xl font-bold text-slate-900 mb-2'>Connections</h1>
+          <p className='text-slate-600'>Manage your network and discover new connections</p>
         </div>
 
-        <div className='mb-6 grid grid-cols-2 sm:grid-cols-4 gap-3'>
-          {dataArray.map((item, index) => (
-            <div key={index} className='flex flex-col items-center justify-center p-3 sm:p-4 bg-white rounded-xl shadow-sm border border-slate-100'>
-              <b className='text-xl text-slate-800'>{item.value?.length || 0}</b>
-              <p className='text-slate-500 text-xs font-medium mt-1'>{item.label}</p>
-            </div>
+        {/* Stat cards (click korle oi tab khole) */}
+        <div className='mb-8 grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5'>
+          {dataArray.map((item) => (
+            <button
+              key={item.label}
+              onClick={() => setCurrentTab(item.label)}
+              className={`flex items-center gap-3 p-4 rounded-xl border bg-white shadow-sm text-left transition hover:shadow-md cursor-pointer ${
+                currentTab === item.label ? 'border-indigo-400 ring-2 ring-indigo-500/20' : 'border-slate-200'
+              }`}
+            >
+              <span className={`size-10 rounded-full flex items-center justify-center shrink-0 ${item.accent}`}>
+                <item.icon className='w-5 h-5' />
+              </span>
+              <span>
+                <span className='block text-2xl font-bold text-slate-900 leading-none'>{item.value.length}</span>
+                <span className='block text-sm text-slate-500 mt-1'>{item.label}</span>
+              </span>
+            </button>
           ))}
         </div>
 
-        <div className='w-full mb-6 max-w-[100vw] sm:max-w-full -mx-4 sm:mx-0 px-4 sm:px-0'>
-          <div className='flex overflow-x-auto no-scrollbar items-center gap-2 pb-2'>
-            {dataArray.map((tab) => (
+        {/* Tabs */}
+        <div className='flex gap-2 overflow-x-auto no-scrollbar pb-1'>
+          {dataArray.map((tab) => {
+            const active = currentTab === tab.label
+
+            return (
               <button
-                onClick={() => setCurrentTab(tab.label)}
                 key={tab.label}
-                className={` cursor-pointer shrink-0 flex items-center px-4 py-2.5 text-sm rounded-full transition-all ${
-                  currentTab === tab.label 
-                  ? 'bg-slate-800 text-white shadow-md' 
-                  : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+                onClick={() => setCurrentTab(tab.label)}
+                className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium border transition cursor-pointer ${
+                  active
+                    ? 'bg-linear-to-r from-indigo-500 to-purple-600 text-white border-transparent shadow-md'
+                    : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
                 }`}
               >
                 <tab.icon className='w-4 h-4' />
-                <span className='ml-2 font-medium'>{tab.label}</span>
-                <span className={`ml-2 text-xs px-2 py-0.5 rounded-full font-medium ${
-                  currentTab === tab.label ? 'bg-slate-600 text-white' : 'bg-slate-100 text-slate-600'
-                }`}>
-                  {tab.value?.length || 0}
+                {tab.label}
+                <span className={`text-xs px-2 py-0.5 rounded-full ${active ? 'bg-white/25 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                  {tab.value.length}
                 </span>
               </button>
-            ))}
-          </div>
+            )
+          })}
         </div>
 
-        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
-          {currentList.map((user) => (
-            <div key={user._id} className='flex flex-col p-4 bg-white shadow-sm border border-slate-100 rounded-2xl w-full min-w-0'>
-              
-              <div className='flex items-center gap-3 mb-3'>
-                <img src={user.profile_picture} alt="" className='rounded-full w-12 h-12 sm:w-14 sm:h-14 object-cover border border-slate-100 shrink-0' />
+        {/* Users list */}
+        {currentList.length === 0 ? (
+          <div className='mt-16 flex flex-col items-center text-center text-slate-500'>
+            <span className='size-14 rounded-full bg-slate-100 flex items-center justify-center mb-3'>
+              {React.createElement(tabsConfig.find((t) => t.label === currentTab).icon, { className: 'w-6 h-6' })}
+            </span>
+            <p>No {currentTab.toLowerCase()} found.</p>
+          </div>
+        ) : (
+          <div className='grid gap-4 sm:grid-cols-2 xl:grid-cols-3 mt-6'>
+            {currentList.map((user) => (
+              <div key={user._id} className='flex gap-4 p-4 bg-white border border-slate-200 shadow-sm rounded-xl'>
+                <img src={user.profile_picture} alt="" className='rounded-full size-12 object-cover shadow-md shrink-0' />
+
                 <div className='flex-1 min-w-0'>
-                  <p className='font-semibold text-slate-800 text-base truncate'>{user.full_name}</p>
-                  <p className='text-slate-500 text-xs sm:text-sm truncate'>@{user.username}</p>
+                  <p className='font-semibold text-slate-800 truncate'>{user.full_name}</p>
+                  <p className='text-sm text-slate-500 truncate'>@{user.username}</p>
+                  {user.bio && <p className='text-sm text-slate-600 mt-1 line-clamp-2'>{user.bio}</p>}
+
+                  <div className='flex max-sm:flex-col gap-2 mt-4'>
+                    <button
+                      onClick={() => navigate(`/profile/${user._id}`)}
+                      className='flex-1 whitespace-nowrap py-2 px-3 text-sm rounded-lg bg-linear-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 active:scale-95 transition text-white cursor-pointer'
+                    >
+                      View Profile
+                    </button>
+
+                    {currentTab === 'Following' && (
+                      <button
+                        onClick={() => handleUnfollow(user._id)}
+                        className='flex-1 whitespace-nowrap py-2 px-3 text-sm rounded-lg border border-red-200 text-red-600 hover:bg-red-50 active:scale-95 transition cursor-pointer'
+                      >
+                        Unfollow
+                      </button>
+                    )}
+
+                    {currentTab === 'Pending' && (
+                      <button
+                        onClick={() => acceptConnection(user._id)}
+                        className='flex-1 whitespace-nowrap py-2 px-3 text-sm rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white active:scale-95 transition cursor-pointer'
+                      >
+                        Accept
+                      </button>
+                    )}
+
+                    {currentTab === 'Connections' && (
+                      <button
+                        onClick={() => navigate(`/messages/${user._id}`)}
+                        className='flex-1 whitespace-nowrap py-2 px-3 text-sm rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 active:scale-95 transition cursor-pointer flex items-center justify-center gap-1'
+                      >
+                        <MessageSquare className='w-4 h-4' />
+                        Message
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
-              
-              {user.bio && (
-                <p className='text-sm text-slate-600 mb-4 line-clamp-2 w-full'>
-                  {user.bio}
-                </p>
-              )}
-              
-              <div className='flex gap-2 w-full mt-auto pt-2'>
-                <button 
-                  onClick={() => navigate(`/profile/${user._id}`)} 
-                  className='flex-1 py-2 px-2 text-sm font-medium rounded-xl bg-linear-to-r from-indigo-500 to-purple-600 hover:opacity-90 active:scale-95 transition-all text-white text-center truncate'>
-                  Profile
-                </button>
-
-                {currentTab === 'Following' && (
-                  <button 
-                    onClick={() => handleUnfollow(user._id)} 
-                    className='flex-1 py-2 px-2 text-sm font-medium rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 active:scale-95 transition-all text-center truncate'>
-                    Unfollow
-                  </button>
-                )}
-
-                {currentTab === 'Pending' && (
-                  <button 
-                    onClick={() => acceptConnection(user._id)} 
-                    className='flex-1 py-2 px-2 text-sm font-medium rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 active:scale-95 transition-all text-center truncate'>
-                    Accept
-                  </button>
-                )}
-
-                {currentTab === 'Connections' && (
-                  <button 
-                    onClick={() => navigate(`/messages/${user._id}`)} 
-                    className='  flex-1 py-2 px-2 text-sm font-medium rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 active:scale-95 transition-all flex items-center justify-center gap-1.5 truncate'>
-                    <MessageSquare className='w-4 h-4 shrink-0' />
-                    Message
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
-          
-          {currentList.length === 0 && (
-            <div className='col-span-full py-10 text-center text-slate-500'>
-              No {currentTab.toLowerCase()} found.
-            </div>
-          )}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )
