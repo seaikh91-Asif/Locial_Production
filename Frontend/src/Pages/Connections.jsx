@@ -83,8 +83,8 @@ const Connections = () => {
   }, [])
 
   return (
-    <div className='min-h-screen bg-slate-50'>
-      <div className='max-w-6xl mx-auto p-4 sm:p-6'>
+    <div className='min-h-screen bg-slate-50 w-full max-w-[100vw] overflow-x-hidden flex flex-col'>
+      <div className='max-w-6xl mx-auto w-full p-4 sm:p-6 flex-1 min-w-0'>
 
         {/* Title */}
         <div className='mb-8 pr-14 sm:pr-0'>
@@ -92,50 +92,52 @@ const Connections = () => {
           <p className='text-slate-600'>Manage your network and discover new connections</p>
         </div>
 
-        {/* Stat cards (click korle oi tab khole) */}
+        {/* Stat cards (click korle oi tab khole) - Alignment Fixed */}
         <div className='mb-8 grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5'>
           {dataArray.map((item) => (
             <button
               key={item.label}
               onClick={() => setCurrentTab(item.label)}
-              className={`flex items-center gap-3 p-4 rounded-xl border bg-white shadow-sm text-left transition hover:shadow-md cursor-pointer ${
+              className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl border bg-white shadow-sm text-center transition hover:shadow-md cursor-pointer ${
                 currentTab === item.label ? 'border-indigo-400 ring-2 ring-indigo-500/20' : 'border-slate-200'
               }`}
             >
               <span className={`size-10 rounded-full flex items-center justify-center shrink-0 ${item.accent}`}>
                 <item.icon className='w-5 h-5' />
               </span>
-              <span>
+              <div>
                 <span className='block text-2xl font-bold text-slate-900 leading-none'>{item.value.length}</span>
-                <span className='block text-sm text-slate-500 mt-1'>{item.label}</span>
-              </span>
+                <span className='block text-sm text-slate-500 mt-1 font-medium'>{item.label}</span>
+              </div>
             </button>
           ))}
         </div>
 
-        {/* Tabs */}
-        <div className='flex gap-2 overflow-x-auto no-scrollbar pb-1'>
-          {dataArray.map((tab) => {
-            const active = currentTab === tab.label
+        {/* Tabs - Mobile Overflow Fixed */}
+        <div className='w-full mb-4 max-w-[100vw] sm:max-w-full -mx-4 sm:mx-0 px-4 sm:px-0'>
+          <div className='flex gap-2 overflow-x-auto no-scrollbar pb-2'>
+            {dataArray.map((tab) => {
+              const active = currentTab === tab.label
 
-            return (
-              <button
-                key={tab.label}
-                onClick={() => setCurrentTab(tab.label)}
-                className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium border transition cursor-pointer ${
-                  active
-                    ? 'bg-linear-to-r from-indigo-500 to-purple-600 text-white border-transparent shadow-md'
-                    : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
-                }`}
-              >
-                <tab.icon className='w-4 h-4' />
-                {tab.label}
-                <span className={`text-xs px-2 py-0.5 rounded-full ${active ? 'bg-white/25 text-white' : 'bg-slate-100 text-slate-600'}`}>
-                  {tab.value.length}
-                </span>
-              </button>
-            )
-          })}
+              return (
+                <button
+                  key={tab.label}
+                  onClick={() => setCurrentTab(tab.label)}
+                  className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium border transition cursor-pointer ${
+                    active
+                      ? 'bg-linear-to-r from-indigo-500 to-purple-600 text-white border-transparent shadow-md'
+                      : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
+                  }`}
+                >
+                  <tab.icon className='w-4 h-4' />
+                  {tab.label}
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${active ? 'bg-white/25 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                    {tab.value.length}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
         </div>
 
         {/* Users list */}
@@ -147,9 +149,9 @@ const Connections = () => {
             <p>No {currentTab.toLowerCase()} found.</p>
           </div>
         ) : (
-          <div className='grid gap-4 sm:grid-cols-2 xl:grid-cols-3 mt-6'>
+          <div className='grid gap-4 sm:grid-cols-2 xl:grid-cols-3 mt-4'>
             {currentList.map((user) => (
-              <div key={user._id} className='flex gap-4 p-4 bg-white border border-slate-200 shadow-sm rounded-xl'>
+              <div key={user._id} className='flex gap-4 p-4 bg-white border border-slate-200 shadow-sm rounded-xl w-full min-w-0'>
                 <img src={user.profile_picture} alt="" className='rounded-full size-12 object-cover shadow-md shrink-0' />
 
                 <div className='flex-1 min-w-0'>
