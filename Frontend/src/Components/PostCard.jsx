@@ -126,6 +126,8 @@ const PostCard = ({ post, onDelete }) => {
                     <img
                         src={post?.user?.profile_picture}
                         alt=""
+                        loading='lazy' 
+                        decoding='async'
                         className='w-10 h-10 rounded-full object-cover shadow shrink-0'
                     />
                     <div className='min-w-0'>
@@ -143,7 +145,7 @@ const PostCard = ({ post, onDelete }) => {
                     </div>
                 </div>
 
-                {/* Shudhu nijer post-e three dots dekhabe */}
+                {/* three Dost only own post */}
                 {isOwner && (
                     <div className='relative' ref={menuRef}>
                         <button
@@ -188,6 +190,8 @@ const PostCard = ({ post, onDelete }) => {
                             key={index}
                             className={`w-full object-cover rounded-lg ${post.image_urls.length === 1 ? 'col-span-2 h-auto' : 'h-48'}`}
                             alt=""
+                            loading='lazy' 
+                            decoding='async'
                         />
                     ))}
                 </div>
@@ -267,4 +271,4 @@ const PostCard = ({ post, onDelete }) => {
     )
 }
 
-export default PostCard
+export default React.memo(PostCard)
