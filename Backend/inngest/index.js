@@ -8,28 +8,33 @@ import { deleteImageKitFiles } from '../configs/deleteImages.js'
 
 export const inngest = new Inngest({ id: 'locial-app' })
 
-// Save user to database when created in Clerk
 const syncUserCreation = inngest.createFunction(
     { id: 'sync-user-from-clerk', triggers: { event: 'clerk/user.created' } },
     async ({ event }) => {
-        const { id, first_name, last_name, email_addresses, image_url } = event.data
+        const { id, first_name, last_name, email_addresses, image_url, username: clerkUsername } = event.data
 
-        let username = email_addresses[0].email_address.split('@')[0]
+        // getOrCreateUser age toiri kore thakle kichu korar dorkar nei
+        const existing = await User.findById(id)
+        if (existing) return { message: 'User already exists' }
 
-        // Check availability of username
-        const user = await User.findOne({ username })
-        if (user) {
+        const email = email_addresses?.[0]?.email_address || `${id}@no-email.locial`
+
+        let username = clerkUsername || email.split('@')[0]
+        if (await User.findOne({ username })) {
             username = username + Math.floor(Math.random() * 10000)
         }
 
-        const userData = {
-            _id: id,
-            email: email_addresses[0].email_address,
-            full_name: `${first_name || ''} ${last_name || ''}`.trim(),
-            profile_picture: image_url,
-            username
+        try {
+            await User.create({
+                _id: id,
+                email,
+                full_name: `${first_name || ''} ${last_name || ''}`.trim() || username,
+                profile_picture: image_url,
+                username,
+            })
+        } catch (error) {
+            if (error.code !== 11000) throw error
         }
-        await User.create(userData)
     }
 )
 

@@ -5,16 +5,14 @@ import fs from 'fs'
 import { profile } from "console"
 import Post from "../src/models/Post.js"
 import { inngest } from "../inngest/index.js"
+import { getOrCreateUser } from '../configs/syncClerkUser.js'
 
 // Get User data using userId
 export const getUserData = async (req, res) => {
     try {
         const { userId } = req.auth()
-        const user = await User.findById(userId)
-        if (!user) {
-            return res.json({ success: false, message: "User not found" })
-        }
-        return res.json({ success: true, user })
+        const user = await getOrCreateUser(userId)
+        res.json({ success: true, user })
     } catch (error) {
         console.log(error)
         res.json({ success: false, message: error.message })
@@ -106,20 +104,28 @@ export const followUser = async (req, res) => {
         const { userId } = req.auth()
         const { id } = req.body
 
-        const user = await User.findById(userId)
-
-        if (user.following.includes(id)) {
-            return res.json({ success: false, message: "You are already following this user" })
+        if (id === userId) {
+            return res.json({ success: false, message: 'You cannot follow yourself' })
         }
 
-        user.following.push(id)
-        await user.save()
-
         const toUser = await User.findById(id)
-        toUser.followers.push(userId)
-        await toUser.save()
+        if (!toUser) {
+            return res.json({ success: false, message: 'User not found' })
+        }
 
-        res.json({ success: true, message: "Now you are following this user" })
+        const user = await User.findById(userId)
+        if (!user) {
+            return res.json({ success: false, message: 'User not found. Please refresh the page.' })
+        }
+
+        if (user.following.includes(id)) {
+            return res.json({ success: false, message: 'You are already following this user' })
+        }
+
+        await User.findByIdAndUpdate(userId, { $addToSet: { following: id } })
+        await User.findByIdAndUpdate(id, { $addToSet: { followers: userId } })
+
+        res.json({ success: true, message: 'Now you are following this user' })
     } catch (error) {
         console.log(error)
         res.json({ success: false, message: error.message })
@@ -132,15 +138,10 @@ export const unfollowUser = async (req, res) => {
         const { userId } = req.auth()
         const { id } = req.body
 
-        const user = await User.findById(userId)
-        user.following = user.following.filter(u => u !== id)
-        await user.save()
+        await User.findByIdAndUpdate(userId, { $pull: { following: id } })
+        await User.findByIdAndUpdate(id, { $pull: { followers: userId } })
 
-        const toUser = await User.findById(id)
-        toUser.followers = toUser.followers.filter(u => u !== userId)
-        await toUser.save()
-
-        res.json({ success: true, message: "You are no longer following this user" })
+        res.json({ success: true, message: 'You are no longer following this user' })
     } catch (error) {
         console.log(error)
         res.json({ success: false, message: error.message })
